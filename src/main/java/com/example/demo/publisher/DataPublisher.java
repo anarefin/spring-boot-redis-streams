@@ -27,7 +27,7 @@ public class DataPublisher {
 
     private int counter = 0;
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 10000)
     public void publishData() {
         counter++;
         DummyData data = new DummyData(UUID.randomUUID().toString(), "Message " + counter);

@@ -4,6 +4,7 @@ import com.example.demo.consumer.DataConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
@@ -39,6 +40,9 @@ public class RedisConfig {
 
     @Value("${redis.stream.consumer}")
     private String consumerName;
+    
+    @Value("${redis.stream.consumer.prefix:consumer-}")
+    private String consumerPrefix;
 
     @Bean(name = "streamListenerExecutor")
     public TaskExecutor streamListenerExecutor() {
@@ -46,7 +50,7 @@ public class RedisConfig {
         executor.setCorePoolSize(4);
         executor.setMaxPoolSize(10);
         executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("redis-stream-listener-");
+        executor.setThreadNamePrefix(consumerPrefix);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);
         executor.initialize();
@@ -78,7 +82,8 @@ public class RedisConfig {
     }
 
     @Bean
-    public Subscription subscription(RedisConnectionFactory factory,
+    @ConditionalOnProperty(name = "redis.stream.consumer.count", havingValue = "0", matchIfMissing = false)
+    public Subscription singleConsumerSubscription(RedisConnectionFactory factory,
                                    StreamMessageListenerContainer<String, MapRecord<String, String, String>> listenerContainer,
                                    DataConsumer dataConsumer,
                                    StringRedisTemplate redisTemplate) {
